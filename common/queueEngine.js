@@ -15,7 +15,7 @@ QueueEngine.prototype.start = function() {
 QueueEngine.prototype.engine = function() {
   this.handleQueue(Queue.rankedConquest);
 
-  // this.handleQueue(Queue.normalConquest);
+  this.handleQueue(Queue.normalConquest);
 };
 
 QueueEngine.prototype.handleQueue = function(queue) {
@@ -54,7 +54,8 @@ QueueEngine.prototype.handleQueue = function(queue) {
       users.forEach(function(user) {
         var publicUser = {
           ign: user.ign,
-          roles: user.roles
+          roles: user.roles,
+          avatarSrc: user.avatarSrc
         };
         party.push(publicUser)
 
