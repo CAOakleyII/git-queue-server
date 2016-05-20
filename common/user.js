@@ -2,6 +2,10 @@ var Queue = require('./queue');
 
 function User(socket) {
   this.socket = socket;
+  this.roles = [];
+  this.ign = "";
+  this.gamemode = "";
+
   this.avatarSrc = "https://hydra-media.cursecdn.com/smite.gamepedia.com/e/ea/Icon_Player_SmiteCommunity.png";
   this.socket.on('join-queue', this.joinQueue.bind(this));
   this.socket.on('disconnect', this.disconnect.bind(this));
