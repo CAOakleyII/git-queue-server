@@ -13,6 +13,8 @@ function Queue() {
   this.rankedConquest["Jungle"] = [];
   this.rankedConquest["Mid"] = [];
   this.rankedConquest["Solo"] = [];
+
+  this.parties = [];
 }
 
 module.exports = exports = new Queue();

@@ -1,6 +1,8 @@
 var Server = require('socket.io');
 var Queue = require('./queue');
 var User = require('./user');
+var Guid = require('guid');
+var PartyEngine = require('./partyEngine');
 
 function QueueEngine() {
   this.users = [];
@@ -13,12 +15,12 @@ QueueEngine.prototype.start = function() {
 };
 
 QueueEngine.prototype.engine = function() {
-  this.handleQueue(Queue.rankedConquest);
+  this.handleQueue(Queue.rankedConquest, 5);
 
-  this.handleQueue(Queue.normalConquest);
+  this.handleQueue(Queue.normalConquest, 5);
 };
 
-QueueEngine.prototype.handleQueue = function(queue) {
+QueueEngine.prototype.handleQueue = function(queue, partySize) {
   var rolesAvailable = 0;
 
   for(var roles in queue){
@@ -28,7 +30,7 @@ QueueEngine.prototype.handleQueue = function(queue) {
     }
   }
 
-  if (rolesAvailable != 5) {
+  if (rolesAvailable != partySize) {
     // return;
   }
 
@@ -47,9 +49,17 @@ QueueEngine.prototype.handleQueue = function(queue) {
     }
   }
 
-  if (users.length == 5) {
-      console.log("found a party!");
-      var party = [];
+  if (users.length == partySize) {
+
+      var publicParty = {
+        id: "",
+        users: []
+      };
+
+      var serverParty = {
+        id: Guid.raw(),
+        users: users
+      };
 
       users.forEach(function(user) {
         var publicUser = {
@@ -57,7 +67,8 @@ QueueEngine.prototype.handleQueue = function(queue) {
           roles: user.roles,
           avatarSrc: user.avatarSrc
         };
-        party.push(publicUser)
+
+        publicParty.users.push(publicUser)
 
         for (var roleName in queue) {
           var role = queue[roleName];
@@ -65,10 +76,15 @@ QueueEngine.prototype.handleQueue = function(queue) {
             role.splice(role.indexOf(user), 1);
           }
         }
+
       });
 
-      users.forEach(function(user) {
-        user.socket.emit("PartyFound", party);
+      console.log("created a party!");
+      PartyEngine.setUpParty(serverParty);
+      Queue.parties.push(serverParty);
+
+      serverParty.users.forEach(function(user) {
+        user.socket.emit("party-found", publicParty.users);
       });
   }
 };
