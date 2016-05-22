@@ -15,6 +15,7 @@ function Queue() {
   this.rankedConquest["Solo"] = [];
 
   this.parties = [];
+  this.publicParties = [];
 }
 
 module.exports = exports = new Queue();

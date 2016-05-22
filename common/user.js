@@ -12,7 +12,8 @@ function User(socket) {
   this.socket.on('join-queue', this.joinQueue.bind(this));
   this.socket.on('disconnect', this.disconnect.bind(this));
   this.socket.on('accept-party', this.acceptParty.bind(this));
-
+  this.socket.on('retrieve-party', this.retrieveParty.bind(this));
+  this.socket.on('party-message', this.partyMessage.bind(this));
 }
 
 User.prototype.joinQueue = function(data) {
@@ -30,11 +31,14 @@ User.prototype.leaveQueue = function() {
 }
 
 User.prototype.acceptParty = function(data) {
-  console.log(this.ign + " accepted the party.");
-  console.log('party id', this.partyId);
-  console.log('socket', this.socket);
-  this.socket.nsp
   this.socket.nsp.to(this.partyId).emit('accepted-party', this.ign);
+}
+
+User.prototype.retrieveParty = function() {
+  var self = this;
+  var party = Queue.publicParties.find(function(x) { return x.id == self.partyId })
+  if (!party){ return }
+  this.socket.emit("retrieve-party", party.users);
 }
 
 User.prototype.removeFromQueue = function() {
@@ -44,6 +48,17 @@ User.prototype.removeFromQueue = function() {
       Queue[self.gamemode][role].splice(Queue[self.gamemode][role].indexOf(self), 1);
     }
   });
+}
+
+User.prototype.partyMessage = function(msg) {
+  var message = {
+    user : {
+      ign: this.ign
+    },
+    time: Date.now(),
+    text: msg.text
+  };
+  this.socket.nsp.to(this.partyId).emit('party-message', message);
 }
 
 User.prototype.disconnect = function() {

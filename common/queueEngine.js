@@ -3,6 +3,7 @@ var Queue = require('./queue');
 var User = require('./user');
 var Guid = require('guid');
 var PartyEngine = require('./partyEngine');
+var Party = require('./party');
 
 function QueueEngine() {
   this.users = [];
@@ -24,7 +25,6 @@ QueueEngine.prototype.handleQueue = function(queue, partySize) {
   var rolesAvailable = 0;
 
   for(var roles in queue){
-    // console.log(roles);
     if(queue[roles].length >= 1) {
       rolesAvailable++;
     }
@@ -51,16 +51,11 @@ QueueEngine.prototype.handleQueue = function(queue, partySize) {
 
   if (users.length == partySize) {
 
-      var publicParty = {
-        id: "",
-        users: []
-      };
+      var partyId = Guid.raw();
+      var publicParty = new Party(partyId);
+      var serverParty = new Party(partyId);
 
-      var serverParty = {
-        id: Guid.raw(),
-        users: users
-      };
-
+      serverParty.users = users;
       users.forEach(function(user) {
         var publicUser = {
           ign: user.ign,
@@ -79,10 +74,11 @@ QueueEngine.prototype.handleQueue = function(queue, partySize) {
 
       });
 
-      console.log("created a party!");
+
+      console.log("created a party! - track how often this finds a party");
       PartyEngine.setUpParty(serverParty);
       Queue.parties.push(serverParty);
-
+      Queue.publicParties.push(publicParty)
       serverParty.users.forEach(function(user) {
         user.socket.emit("party-found", publicParty.users);
       });
