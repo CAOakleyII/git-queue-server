@@ -16,7 +16,7 @@ QueueEngine.prototype.start = function() {
 };
 
 QueueEngine.prototype.engine = function() {
-  this.handleQueue(Queue.rankedConquest, 5);
+  this.handleQueue(Queue.rankedConquest, 1);
 
   this.handleQueue(Queue.normalConquest, 5);
 };
