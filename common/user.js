@@ -1,4 +1,6 @@
-var Queue = require('./queue');
+var QueueState = require('./queueState');
+var GameModes = require('../enums/gameModes');
+var Platforms = require('../enums/platforms');
 
 function User(socket) {
   this.socket = socket;
@@ -6,6 +8,7 @@ function User(socket) {
   this.ign = "";
   this.gamemode = "";
   this.partyId = "";
+  this.queueId = "";
 
   this.avatarSrc = "https://hydra-media.cursecdn.com/smite.gamepedia.com/e/ea/Icon_Player_SmiteCommunity.png";
   this.socket.on('leave-queue', this.leaveQueue.bind(this));
@@ -18,9 +21,23 @@ function User(socket) {
 
 User.prototype.joinQueue = function(data) {
   var self = this;
-  data.roles.forEach(function(role, index){
-     Queue[data.gamemode][role].push(self);
+  var gamemode = GameModes.Conquest;
+  var ranked = false;
+  
+  var queue = QueueState.queues.find(function(x) {
+    if (x.platform == data.platform) {
+      if (data.platform == Platforms.PC && x.region != data.region)
+      {
+        return;
+      }
+      data.roles.forEach(function(role, index){
+        x.roles[role].push(self);
+      });
+      self.queueId = x.id;
+      return x;
+    }
   });
+
   this.ign = data.ign;
   this.roles = data.roles;
   this.gamemode = data.gamemode;
@@ -36,7 +53,7 @@ User.prototype.acceptParty = function(data) {
 
 User.prototype.retrieveParty = function() {
   var self = this;
-  var party = Queue.publicParties.find(function(x) { return x.id == self.partyId })
+  var party = QueueState.publicParties.find(function(x) { return x.id == self.partyId })
   if (!party){ return }
   this.socket.emit("retrieve-party", party.users);
 }
@@ -44,9 +61,11 @@ User.prototype.retrieveParty = function() {
 User.prototype.removeFromQueue = function() {
   var self = this;
   this.roles.forEach(function(role, index){
-    if(Queue[self.gamemode][role].indexOf(self) != -1) {
-      Queue[self.gamemode][role].splice(Queue[self.gamemode][role].indexOf(self), 1);
-    }
+    QueueState.queues.find(function(queue) {
+      if (queue.id == self.queueId) {
+        queue.roles[role].splice(queue.roles[role].indexOf(self), 1);
+      }
+    });
   });
 }
 

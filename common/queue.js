@@ -1,21 +1,22 @@
+var GameModes = require('../enums/gameModes');
+var Regions = require('../enums/regions');
+var Platforms = require('../enums/platforms')
+var Guid = require('guid');
+
 function Queue() {
+  this.partySize = 5;
+  this.gamemode = GameModes.Conquest;
+  this.region = Regions.NA;
+  this.platform = Platforms.PC;
+  this.ranked = false;
+  this.id = Guid.raw();
+  this.roles = [];
+  this.roles["ADC"] = [];
+  this.roles["Support"] = [];
+  this.roles["Jungle"] = [];
+  this.roles["Mid"] = [];
+  this.roles["Solo"] = [];
 
-  this.normalConquest = [];
-  this.normalConquest["ADC"] = [];
-  this.normalConquest["Support"] = [];
-  this.normalConquest["Jungle"] = [];
-  this.normalConquest["Mid"] = [];
-  this.normalConquest["Solo"] = [];
-
-  this.rankedConquest = [];
-  this.rankedConquest["ADC"] = [];
-  this.rankedConquest["Support"] = [];
-  this.rankedConquest["Jungle"] = [];
-  this.rankedConquest["Mid"] = [];
-  this.rankedConquest["Solo"] = [];
-
-  this.parties = [];
-  this.publicParties = [];
 }
 
-module.exports = exports = new Queue();
+module.exports = Queue;
