@@ -23,7 +23,9 @@ User.prototype.joinQueue = function(data) {
   var self = this;
   var gamemode = GameModes.Conquest;
   var ranked = false;
-  
+
+  this.removeFromQueue();
+
   var queue = QueueState.queues.find(function(x) {
     if (x.platform == data.platform) {
       if (data.platform == Platforms.PC && x.region != data.region)

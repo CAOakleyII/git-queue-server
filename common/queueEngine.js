@@ -8,6 +8,7 @@ var Party = require('./party');
 var Regions = require('../enums/regions');
 var Platforms = require('../enums/platforms');
 
+
 function QueueEngine() {
   this.users = [];
 }
@@ -17,34 +18,18 @@ QueueEngine.prototype.start = function(port) {
   this.io.on('connection', this.userConnected.bind(this));
   setInterval(this.engine.bind(this), 1000/60);
 
-  var normalConquestPCNA = new Queue();
+  this.addQueues();
 
-  var normalConquestPCEU = new Queue();
-  normalConquestPCEU.region = Regions.EU;
-
-  var normalConquestPCAUS = new Queue();
-  normalConquestPCAUS.region = Regions.AUS;
-
-  var normalConquestXbox = new Queue();
-  normalConquestXbox.platform = Platforms.Xbox;
-
-  var normalConquestPS4 = new Queue();
-  normalConquestPS4.platform = Platforms.PS4;
-
-  QueueState.queues = QueueState.queues.concat([
-    normalConquestPCNA,
-    normalConquestPCEU,
-    normalConquestPCAUS,
-    normalConquestXbox,
-    normalConquestPS4
-  ]);
 };
 
 QueueEngine.prototype.engine = function() {
   var self = this;
+
   QueueState.queues.forEach(function(queue) {
     self.handleQueue(queue);
+    self.handlePopularity(queue);
   });
+
 };
 
 QueueEngine.prototype.handleQueue = function(queue) {
@@ -93,15 +78,8 @@ QueueEngine.prototype.handleQueue = function(queue) {
         publicParty.users.push(publicUser)
 
         // remove users from the queue for each of their roles.
-        for (var roleName in queue.roles) {
-          var role = queue.roles[roleName];
-          if (role.indexOf(user) != -1) {
-            role.splice(role.indexOf(user), 1);
-          }
-        }
-
+        user.removeFromQueue();
       });
-
 
       console.log("created a party! - track how often this finds a party");
       PartyEngine.setUpParty(serverParty);
@@ -113,6 +91,49 @@ QueueEngine.prototype.handleQueue = function(queue) {
   }
 };
 
+QueueEngine.prototype.handlePopularity = function(queue){
+  var data = {
+    id: queue.id,
+    platform: queue.platform,
+    region: queue.region,
+    population: 0,
+    roles: []
+  };
+  var totalPop = 0;
+  for (var role in queue.roles){
+    var rolePop = queue.roles[role].length;
+    totalPop += rolePop;
+    var percent =  (rolePop / 20) * 100;
+    data.roles.push({ role: role, percent: percent});
+  }
+  data.population = (totalPop / 40) * 100;
+  this.io.emit('queue-population', data);
+}
+
+QueueEngine.prototype.addQueues = function(){
+  var normalConquestPCNA = new Queue();
+  normalConquestPCNA.partySize = 2;
+  
+  var normalConquestPCEU = new Queue();
+  normalConquestPCEU.region = Regions.EU;
+
+  var normalConquestPCAUS = new Queue();
+  normalConquestPCAUS.region = Regions.AUS;
+
+  var normalConquestXbox = new Queue();
+  normalConquestXbox.platform = Platforms.Xbox;
+
+  var normalConquestPS4 = new Queue();
+  normalConquestPS4.platform = Platforms.PS4;
+
+  QueueState.queues = QueueState.queues.concat([
+    normalConquestPCNA,
+    normalConquestPCEU,
+    normalConquestPCAUS,
+    normalConquestXbox,
+    normalConquestPS4
+  ]);
+}
 
 
 QueueEngine.prototype.userConnected = function(socket) {
